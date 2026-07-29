@@ -7,10 +7,9 @@ pillow==10.3.0
 pytesseract==0.3.10
 python-dotenv==1.0.1
 google-generativeai==0.7.2
-sentence-transformers==3.0.1
+json-logic==0.9.0
 django-redis==5.4.0
 redis==5.0.8
-opencv-python-headless==4.10.0.84
 supabase==2.5.3
 gunicorn==22.0.0
 whitenoise==6.7.0
