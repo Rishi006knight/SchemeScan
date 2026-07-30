@@ -1,6 +1,10 @@
 [build]
   publish = "dist"
   command = "npm run build"
+  base = "frontend"
+
+[build.environment]
+  VITE_API_URL = "https://schemescan-backend.onrender.com/api"
 
 [[redirects]]
   from = "/*"
