@@ -23,6 +23,9 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8000
 
-CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "--preload", "--max-requests", "500"]
+CMD ["sh", "entrypoint.sh"]
