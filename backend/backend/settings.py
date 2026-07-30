@@ -67,27 +67,40 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # ─── Database — Supabase PostgreSQL ───────────────────────────────────────────
-# Use Supabase's IPv4-compatible connection pooler to avoid IPv6 issues on Render.
-# In Render env vars set:
-#   DB_HOST = aws-0-ap-south-1.pooler.supabase.com   (Session pooler — IPv4)
-#   DB_PORT = 5432
-#   DB_USER = postgres.jcsiaqzkcwgrbayjupbq           (pooler user format)
-#   DB_NAME = postgres
-#   DB_PASSWORD = <your supabase db password>
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'postgres'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'aws-0-ap-south-1.pooler.supabase.com'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'sslmode': 'require',
-        },
+# Option A (recommended): Set DATABASE_URL in Render env vars.
+#   Copy the "Session mode" connection string from:
+#   Supabase → Settings → Database → Connection pooling
+#   Format: postgresql://postgres.REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres
+#
+# Option B: Set individual DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME vars.
+
+_db_url = os.getenv('DATABASE_URL', '')
+
+if _db_url:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(
+            _db_url,
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'postgres'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'aws-0-ap-northeast-1.pooler.supabase.com'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+                'connect_timeout': 10,
+                'sslmode': 'require',
+            },
+        }
+    }
+
 
 # ─── Redis Cache ───────────────────────────────────────────────────────────────
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')

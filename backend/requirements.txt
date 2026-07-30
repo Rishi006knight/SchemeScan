@@ -13,3 +13,4 @@ redis==5.0.8
 supabase==2.5.3
 gunicorn==22.0.0
 whitenoise==6.7.0
+dj-database-url==2.1.0
