@@ -4,7 +4,7 @@
   base = "frontend"
 
 [build.environment]
-  VITE_API_URL = "https://schemescan-backend.onrender.com/api"
+  VITE_API_URL = "https://schemescan-qrha.onrender.com/api"
 
 [[redirects]]
   from = "/*"
