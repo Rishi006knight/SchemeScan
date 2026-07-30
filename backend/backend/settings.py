@@ -67,16 +67,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # ─── Database — Supabase PostgreSQL ───────────────────────────────────────────
+# Use Supabase's IPv4-compatible connection pooler to avoid IPv6 issues on Render.
+# In Render env vars set:
+#   DB_HOST = aws-0-ap-south-1.pooler.supabase.com   (Session pooler — IPv4)
+#   DB_PORT = 5432
+#   DB_USER = postgres.jcsiaqzkcwgrbayjupbq           (pooler user format)
+#   DB_NAME = postgres
+#   DB_PASSWORD = <your supabase db password>
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', 'postgres'),
         'USER': os.getenv('DB_USER', 'postgres'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'db.jcsiaqzkcwgrbayjupbq.supabase.co'),
+        'HOST': os.getenv('DB_HOST', 'aws-0-ap-south-1.pooler.supabase.com'),
         'PORT': os.getenv('DB_PORT', '5432'),
         'OPTIONS': {
             'connect_timeout': 10,
+            'sslmode': 'require',
         },
     }
 }
