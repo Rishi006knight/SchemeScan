@@ -32,7 +32,7 @@ export default function LandingPage() {
     queryFn: () => schemeApi.list(),
   })
 
-  const schemeCount = schemesData?.data?.count || '10+'
+  const schemeCount = schemesData?.data?.count ? `${schemesData.data.count}+` : '135+'
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,42 +58,40 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Headline */}
-          <div className="text-center max-w-4xl mx-auto animate-slide-up">
-            <h1 className="text-5xl md:text-7xl font-display font-extrabold text-white leading-tight">
-              Find Government
-              <br />
-              <span className="gradient-text">Benefits You Deserve</span>
+          {/* Heading */}
+          <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-black tracking-tight mb-6 text-white">
+              Find Every Scheme You{' '}
+              <span className="gradient-text">Qualify For</span>
             </h1>
-            <p className="mt-6 text-xl text-surface-300 leading-relaxed max-w-2xl mx-auto">
-              Instantly check eligibility for <strong className="text-white">{schemeCount} government schemes</strong>. 
-              No paperwork, no confusion — just a clear answer powered by AI.
+            <p className="text-xl text-surface-300 max-w-2xl mx-auto mb-10">
+              Stop searching dozens of government portals. Enter your details once,
+              let our explainable AI rule engine match you with 135+ central and state benefits.
             </p>
           </div>
 
           {/* Search bar */}
-          <form onSubmit={handleSearch} className="mt-10 max-w-2xl mx-auto animate-slide-up">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-10">
+            <div className="glass p-2 flex items-center gap-2 rounded-2xl shadow-2xl">
+              <Search className="w-5 h-5 text-surface-400 ml-3 shrink-0" />
               <input
+                type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                type="text"
-                placeholder='Search "farmer scheme", "student scholarship", "widow pension"...'
-                className="w-full pl-12 pr-36 py-4 bg-surface-900/80 backdrop-blur border border-surface-700 rounded-2xl text-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base transition-all"
+                placeholder="Try 'farmer in Tamil Nadu' or 'scholarship for girl student'..."
+                className="flex-1 bg-transparent text-surface-100 placeholder-surface-500 text-base focus:outline-none px-2 py-2"
               />
-              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary rounded-xl py-2.5">
+              <button type="submit" className="btn-primary shrink-0">
                 Search
               </button>
             </div>
           </form>
 
-          {/* CTA buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
+          {/* CTAs */}
+          <div className="flex flex-wrap justify-center gap-4">
             {isAuthenticated ? (
-              <Link to="/eligibility" className="btn-primary btn-lg gap-2">
-                <Sparkles className="w-5 h-5" />
-                Check My Eligibility
+              <Link to="/dashboard" className="btn-primary btn-lg gap-2">
+                Go to Dashboard
                 <ArrowRight className="w-5 h-5" />
               </Link>
             ) : (
@@ -103,7 +101,7 @@ export default function LandingPage() {
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link to="/schemes" className="btn-secondary btn-lg">
-                  Browse All Schemes
+                  Browse All 135+ Schemes
                 </Link>
               </>
             )}
@@ -112,8 +110,8 @@ export default function LandingPage() {
           {/* Stats */}
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
             {[
-              { value: '10+', label: 'Schemes Available' },
-              { value: '28', label: 'States Covered' },
+              { value: schemeCount, label: 'Schemes Available' },
+              { value: '28+', label: 'States Covered' },
               { value: '100%', label: 'Free Forever' },
               { value: 'AI', label: 'Powered Checker' },
             ].map(({ value, label }) => (
