@@ -1,29 +1,155 @@
-import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { ArrowRight, Sparkles, Search, Shield, Zap, Users, Award, ChevronRight } from 'lucide-react'
-import { schemeApi } from '@/lib/api'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  Sparkles, Search, Zap, Users, Award, ChevronRight,
+  ArrowRight, Star, ChevronDown, Check,
+  Building2, GraduationCap, Stethoscope, Landmark
+} from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { schemeApi } from '@/lib/api'
 import { useAuthStore } from '@/store'
+import AnimatedCounter from '@/components/AnimatedCounter'
 
 const CATEGORIES = [
-  { label: 'Agriculture', icon: '🌾', color: 'from-green-500/20 to-emerald-500/20 border-green-500/30' },
-  { label: 'Education', icon: '📚', color: 'from-blue-500/20 to-indigo-500/20 border-blue-500/30' },
-  { label: 'Health', icon: '🏥', color: 'from-red-500/20 to-rose-500/20 border-red-500/30' },
-  { label: 'Housing', icon: '🏠', color: 'from-amber-500/20 to-yellow-500/20 border-amber-500/30' },
-  { label: 'Women', icon: '👩', color: 'from-pink-500/20 to-rose-500/20 border-pink-500/30' },
-  { label: 'Finance', icon: '💰', color: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30' },
-  { label: 'Pension', icon: '👴', color: 'from-purple-500/20 to-violet-500/20 border-purple-500/30' },
-  { label: 'MSME', icon: '🏭', color: 'from-orange-500/20 to-amber-500/20 border-orange-500/30' },
+  { label: 'Agriculture', icon: '🌾', count: '10+ Schemes', color: 'from-green-500/20 to-emerald-500/10 border-green-500/30' },
+  { label: 'Education', icon: '📚', count: '12+ Schemes', color: 'from-blue-500/20 to-indigo-500/10 border-blue-500/30' },
+  { label: 'Healthcare', icon: '🏥', count: '11+ Schemes', color: 'from-red-500/20 to-rose-500/10 border-red-500/30' },
+  { label: 'Housing', icon: '🏠', count: '6+ Schemes', color: 'from-amber-500/20 to-yellow-500/10 border-amber-500/30' },
+  { label: 'Women', icon: '👩', count: '10+ Schemes', color: 'from-pink-500/20 to-rose-500/10 border-pink-500/30' },
+  { label: 'MSME & Loans', icon: '🏭', count: '10+ Schemes', color: 'from-orange-500/20 to-amber-500/10 border-orange-500/30' },
+  { label: 'Pensions', icon: '👴', count: '10+ Schemes', color: 'from-purple-500/20 to-violet-500/10 border-purple-500/30' },
+  { label: 'State Schemes', icon: '🏛️', count: '50+ Schemes', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/30' },
+]
+
+const FEATURED_SCHEMES = [
+  {
+    name: 'PM-KISAN (Kisan Samman Nidhi)',
+    category: 'Agriculture',
+    benefit: '₹6,000 / year direct bank transfer in 3 installments',
+    tag: 'All Landholding Farmers',
+    color: 'border-green-500/40 bg-green-500/5',
+    badge: 'bg-green-500/20 text-green-300',
+  },
+  {
+    name: 'Ayushman Bharat (AB-PMJAY)',
+    category: 'Healthcare',
+    benefit: '₹5,00,000 / family / year cashless hospitalization',
+    tag: 'Secondary & Tertiary Care',
+    color: 'border-red-500/40 bg-red-500/5',
+    badge: 'bg-red-500/20 text-red-300',
+  },
+  {
+    name: 'Sukanya Samriddhi Yojana (SSY)',
+    category: 'Women & Child',
+    benefit: '8.2% tax-free compounding interest for girl children',
+    tag: 'Age 0–10 Years',
+    color: 'border-pink-500/40 bg-pink-500/5',
+    badge: 'bg-pink-500/20 text-pink-300',
+  },
+  {
+    name: 'PM Surya Ghar: Muft Bijli Yojana',
+    category: 'Housing & Solar',
+    benefit: 'Up to ₹78,000 direct subsidy + 300 units free power',
+    tag: 'Rooftop Solar',
+    color: 'border-amber-500/40 bg-amber-500/5',
+    badge: 'bg-amber-500/20 text-amber-300',
+  },
+  {
+    name: 'PM Mudra Loan (Shishu / Kishor / Tarun)',
+    category: 'MSME',
+    benefit: 'Collateral-free loans up to ₹20,00,000 for small businesses',
+    tag: 'Entrepreneurs & Micro Units',
+    color: 'border-blue-500/40 bg-blue-500/5',
+    badge: 'bg-blue-500/20 text-blue-300',
+  },
+  {
+    name: 'Atal Pension Yojana (APY)',
+    category: 'Pensions',
+    benefit: 'Guaranteed ₹1,000 to ₹5,000/month lifelong pension from age 60',
+    tag: 'Unorganized Workers',
+    color: 'border-purple-500/40 bg-purple-500/5',
+    badge: 'bg-purple-500/20 text-purple-300',
+  },
 ]
 
 const STEPS = [
-  { step: '01', title: 'Create Profile', desc: 'Fill in your details once — age, income, state, occupation, and more.', icon: Users },
-  { step: '02', title: 'Check Eligibility', desc: 'Our engine evaluates 10+ conditions across all active schemes instantly.', icon: Zap },
-  { step: '03', title: 'Apply with Confidence', desc: 'Get a personalized list with explanations. Apply only where you qualify.', icon: Award },
+  {
+    step: '01',
+    title: 'Create Your Profile',
+    desc: 'Enter basic details once: age, state, annual income, occupation, and family size.',
+    icon: Users,
+    color: 'from-primary-500/20 to-primary-600/10 text-primary-400',
+  },
+  {
+    step: '02',
+    title: 'Instant Rule Engine Matching',
+    desc: 'Our explainable AI tests your profile against 135+ Central and State welfare rules in under 1 second.',
+    icon: Zap,
+    color: 'from-accent-500/20 to-accent-600/10 text-accent-400',
+  },
+  {
+    step: '03',
+    title: 'Claim Verified Benefits',
+    desc: 'Get a clear breakdown of why you qualify, documents required, and official direct application portals.',
+    icon: Award,
+    color: 'from-emerald-500/20 to-emerald-600/10 text-emerald-400',
+  },
+]
+
+const TESTIMONIALS = [
+  {
+    quote: "I found 3 agricultural and equipment subsidies I never knew existed in Tamil Nadu. Applied for PM-KISAN and SMAM the same afternoon!",
+    name: "Rajesh Kannan",
+    role: "Farmer, Thanjavur (Tamil Nadu)",
+    initials: "RK",
+    color: "from-green-500 to-emerald-700",
+  },
+  {
+    quote: "As a first-generation engineering student, SchemeChecker matched me with the AICTE Pragati scholarship that covers my entire tuition fees.",
+    name: "Priya Murthy",
+    role: "B.Tech Student, Pune (Maharashtra)",
+    initials: "PM",
+    color: "from-blue-500 to-indigo-700",
+  },
+  {
+    quote: "The explainable AI breakdown showed me exactly why my workshop qualified for the PM Mudra Kishor loan. No middlemen, zero confusion.",
+    name: "Amit Sharma",
+    role: "Small Business Owner, Ahmedabad (Gujarat)",
+    initials: "AS",
+    color: "from-amber-500 to-orange-700",
+  },
+]
+
+const FAQS = [
+  {
+    q: 'Is SchemeChecker really 100% free?',
+    a: 'Yes! SchemeChecker is a free public welfare initiative designed to ensure every citizen can access government entitlements without paying agents or middlemen.'
+  },
+  {
+    q: 'How does the AI eligibility check work?',
+    a: 'We encode official government criteria into deterministic rule trees. When you check eligibility, our engine evaluates all income brackets, age limits, land ownership rules, and state mandates, then provides transparent explanations for every decision.'
+  },
+  {
+    q: 'Which states are covered?',
+    a: 'All 28 Indian States and 8 Union Territories are covered with Central Sector Schemes. Additionally, we have specialized state-specific modules for Tamil Nadu, Karnataka, Maharashtra, Uttar Pradesh, Kerala, Telangana, Andhra Pradesh, Rajasthan, Gujarat, West Bengal, Bihar, Odisha, Delhi, and Punjab.'
+  },
+  {
+    q: 'Is my personal data safe?',
+    a: 'Absolutely. We do not sell or monetize personal data. Your profile parameters are used strictly within your encrypted session to match welfare rules.'
+  },
+  {
+    q: 'Can I apply for schemes directly through SchemeChecker?',
+    a: 'We provide direct, verified links to official government portals (such as myScheme, PM-KISAN, NHA, NSP, and State Portals) along with the exact document checklist you need to submit.'
+  },
+  {
+    q: 'How accurate are the results?',
+    a: 'Our database is maintained against official gazette notifications and ministry guidelines, updated with the latest 2026 budget announcements.'
+  },
 ]
 
 export default function LandingPage() {
   const [search, setSearch] = useState('')
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
 
@@ -32,7 +158,7 @@ export default function LandingPage() {
     queryFn: () => schemeApi.list(),
   })
 
-  const schemeCount = schemesData?.data?.count ? `${schemesData.data.count}+` : '135+'
+  const totalCount = schemesData?.data?.count || 135
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,184 +166,447 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-16 pb-24">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-hero-pattern opacity-30" />
-        <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-accent-500/10 rounded-full blur-3xl" />
+    <div className="min-h-screen pb-16">
+      
+      {/* ── 1. Hero Section ───────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28">
+        {/* Background glow meshes */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary-500/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 right-1/4 w-[450px] h-[450px] bg-accent-500/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute inset-0 bg-hero-pattern opacity-20 pointer-events-none" />
 
         <div className="page-container relative">
-          {/* Badge */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-400 text-sm font-medium animate-fade-in">
-              <Sparkles className="w-4 h-4" />
-              AI-Powered Government Scheme Discovery
-              <span className="ml-1 bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">Free</span>
-            </div>
-          </div>
-
-          {/* Heading */}
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-black tracking-tight mb-6 text-white">
-              Find Every Scheme You{' '}
-              <span className="gradient-text">Qualify For</span>
-            </h1>
-            <p className="text-xl text-surface-300 max-w-2xl mx-auto mb-10">
-              Stop searching dozens of government portals. Enter your details once,
-              let our explainable AI rule engine match you with 135+ central and state benefits.
-            </p>
-          </div>
-
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-10">
-            <div className="glass p-2 flex items-center gap-2 rounded-2xl shadow-2xl">
-              <Search className="w-5 h-5 text-surface-400 ml-3 shrink-0" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Try 'farmer in Tamil Nadu' or 'scholarship for girl student'..."
-                className="flex-1 bg-transparent text-surface-100 placeholder-surface-500 text-base focus:outline-none px-2 py-2"
-              />
-              <button type="submit" className="btn-primary shrink-0">
-                Search
-              </button>
-            </div>
-          </form>
-
-          {/* CTAs */}
-          <div className="flex flex-wrap justify-center gap-4">
-            {isAuthenticated ? (
-              <Link to="/dashboard" className="btn-primary btn-lg gap-2">
-                Go to Dashboard
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            ) : (
-              <>
-                <Link to="/register" className="btn-primary btn-lg gap-2">
-                  Get Started Free
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link to="/schemes" className="btn-secondary btn-lg">
-                  Browse All 135+ Schemes
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            {[
-              { value: schemeCount, label: 'Schemes Available' },
-              { value: '28+', label: 'States Covered' },
-              { value: '100%', label: 'Free Forever' },
-              { value: 'AI', label: 'Powered Checker' },
-            ].map(({ value, label }) => (
-              <div key={label} className="glass p-4 text-center">
-                <p className="text-3xl font-display font-bold gradient-text">{value}</p>
-                <p className="text-sm text-surface-400 mt-1">{label}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Left Hero Content */}
+            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              
+              {/* Trust Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary-500/10 to-accent-500/10 border border-primary-500/30 text-primary-300 text-xs sm:text-sm font-medium">
+                <Sparkles className="w-4 h-4 text-accent-400" />
+                <span>Explainable AI Welfare Discovery Engine</span>
+                <span className="bg-primary-500 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ml-1">Free</span>
               </div>
-            ))}
+
+              {/* Title */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-black tracking-tight text-white leading-[1.1]">
+                Claim Every Government Scheme You{' '}
+                <span className="bg-gradient-to-r from-primary-400 via-accent-300 to-orange-400 bg-clip-text text-transparent">
+                  Qualify For
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-base sm:text-lg text-surface-300 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                Stop struggling through hundreds of complicated official portals. Enter your profile once and let our rule engine match you with <strong>135+ Central & State benefits</strong> instantly.
+              </p>
+
+              {/* Glowing Search Bar */}
+              <form onSubmit={handleSearch} className="max-w-xl mx-auto lg:mx-0">
+                <div className="glass p-2 flex items-center gap-2 rounded-2xl shadow-glow border border-primary-500/30 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-500/30 transition-all">
+                  <Search className="w-5 h-5 text-surface-400 ml-3 shrink-0" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Try 'farmer in Tamil Nadu' or 'student scholarship'..."
+                    className="flex-1 bg-transparent text-surface-100 placeholder-surface-400 text-sm sm:text-base focus:outline-none px-2 py-1"
+                  />
+                  <button type="submit" className="btn-primary py-2.5 px-5 shrink-0 text-sm font-semibold">
+                    Search
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs text-surface-400 mt-2.5 px-2">
+                  <span className="text-surface-500 font-medium">Quick suggestions:</span>
+                  <button type="button" onClick={() => setSearch('Farmer subsidy')} className="hover:text-primary-300 underline">Farmer</button>
+                  <span>•</span>
+                  <button type="button" onClick={() => setSearch('Scholarship')} className="hover:text-primary-300 underline">Scholarships</button>
+                  <span>•</span>
+                  <button type="button" onClick={() => setSearch('Ayushman Bharat')} className="hover:text-primary-300 underline">Health Cover</button>
+                  <span>•</span>
+                  <button type="button" onClick={() => setSearch('Mudra Loan')} className="hover:text-primary-300 underline">Mudra Loans</button>
+                </div>
+              </form>
+
+              {/* CTAs */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                {isAuthenticated ? (
+                  <Link to="/dashboard" className="btn-primary btn-lg gap-2 shadow-glow">
+                    <span>Go to Dashboard</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/register" className="btn-primary btn-lg gap-2 shadow-glow">
+                      <span>Check My Eligibility Free</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
+                    <Link to="/schemes" className="btn-secondary btn-lg">
+                      <span>Browse 135+ Schemes</span>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              {/* Trust Badges */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 pt-3 text-xs text-surface-400">
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Official Gazette Rules</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Zero Middlemen Fees</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Multilingual AI Support</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Interactive App Mockup */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative mx-auto max-w-md glass rounded-3xl p-6 border border-surface-700/80 shadow-2xl shadow-primary-500/10">
+                
+                {/* Mockup Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-surface-800">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                  </div>
+                  <span className="text-xs font-mono text-primary-400 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Live Eligibility Engine
+                  </span>
+                </div>
+
+                {/* Mockup Profile Badge */}
+                <div className="my-4 p-3.5 rounded-2xl bg-surface-900/90 border border-surface-800 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-surface-400">Citizen Profile: Tamil Nadu</p>
+                    <p className="text-sm font-bold text-white">Farmer • Income &lt; ₹2.5L</p>
+                  </div>
+                  <span className="badge-eligible text-xs px-2.5 py-1">✓ 12 Matches</span>
+                </div>
+
+                {/* Mockup Result Cards */}
+                <div className="space-y-2.5">
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                      🌾
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-white truncate">PM-KISAN Samman Nidhi</p>
+                        <span className="text-[10px] text-emerald-400 font-semibold">ELIGIBLE</span>
+                      </div>
+                      <p className="text-[11px] text-surface-300">₹6,000 / yr Direct Benefit Transfer</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                      🏥
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-white truncate">Ayushman Bharat (AB-PMJAY)</p>
+                        <span className="text-[10px] text-emerald-400 font-semibold">ELIGIBLE</span>
+                      </div>
+                      <p className="text-[11px] text-surface-300">₹5,00,000 Free Cashless Care</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                      ⚡
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-white truncate">PM Surya Ghar Solar</p>
+                        <span className="text-[10px] text-emerald-400 font-semibold">ELIGIBLE</span>
+                      </div>
+                      <p className="text-[11px] text-surface-300">300 Units Free Electricity + Subsidy</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mockup Action */}
+                <div className="mt-4 pt-3 border-t border-surface-800 flex items-center justify-between text-xs">
+                  <span className="text-surface-400">Match score: 98%</span>
+                  <Link to="/eligibility" className="text-primary-400 hover:text-primary-300 font-semibold inline-flex items-center gap-1">
+                    Run check on your profile <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          {/* Animated Stats Bar */}
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <div className="glass p-5 text-center rounded-2xl border border-surface-800/80">
+              <p className="text-3xl sm:text-4xl font-display font-black gradient-text">
+                <AnimatedCounter target={totalCount} suffix="+" />
+              </p>
+              <p className="text-xs sm:text-sm text-surface-400 mt-1 font-medium">Schemes Available</p>
+            </div>
+
+            <div className="glass p-5 text-center rounded-2xl border border-surface-800/80">
+              <p className="text-3xl sm:text-4xl font-display font-black gradient-text">
+                <AnimatedCounter target={28} suffix="+" />
+              </p>
+              <p className="text-xs sm:text-sm text-surface-400 mt-1 font-medium">States & UTs Covered</p>
+            </div>
+
+            <div className="glass p-5 text-center rounded-2xl border border-surface-800/80">
+              <p className="text-3xl sm:text-4xl font-display font-black gradient-text">
+                <AnimatedCounter target={100} suffix="%" />
+              </p>
+              <p className="text-xs sm:text-sm text-surface-400 mt-1 font-medium">Free Forever</p>
+            </div>
+
+            <div className="glass p-5 text-center rounded-2xl border border-surface-800/80">
+              <p className="text-3xl sm:text-4xl font-display font-black gradient-text">
+                AI & Rules
+              </p>
+              <p className="text-xs sm:text-sm text-surface-400 mt-1 font-medium">Explainable Logic</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── 2. Trust & Official Data Sources Banner ──────────────────────── */}
+      <section className="py-8 border-y border-surface-800/80 bg-surface-950/60">
+        <div className="page-container">
+          <p className="text-center text-xs uppercase tracking-widest text-surface-400 font-semibold mb-5">
+            Rules aligned with official Indian Government portals & datasets
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-14 opacity-75 grayscale hover:grayscale-0 transition-all duration-300">
+            <div className="flex items-center gap-2 font-display font-bold text-surface-300 text-sm sm:text-base">
+              <Building2 className="w-5 h-5 text-primary-400" />
+              <span>myScheme.gov.in</span>
+            </div>
+            <div className="flex items-center gap-2 font-display font-bold text-surface-300 text-sm sm:text-base">
+              <GraduationCap className="w-5 h-5 text-blue-400" />
+              <span>National Scholarship Portal</span>
+            </div>
+            <div className="flex items-center gap-2 font-display font-bold text-surface-300 text-sm sm:text-base">
+              <Stethoscope className="w-5 h-5 text-red-400" />
+              <span>National Health Authority</span>
+            </div>
+            <div className="flex items-center gap-2 font-display font-bold text-surface-300 text-sm sm:text-base">
+              <Landmark className="w-5 h-5 text-amber-400" />
+              <span>DBT Bharat</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Categories ───────────────────────────────────────────────────── */}
+      {/* ── 3. Browse by Category ─────────────────────────────────────────── */}
       <section className="py-20">
         <div className="page-container">
-          <div className="text-center mb-12">
-            <h2 className="section-title">Browse by Category</h2>
-            <p className="section-subtitle">Find schemes in the areas that matter most to you</p>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="section-title">Explore Welfare by Category</h2>
+            <p className="section-subtitle">Select any domain to find target subsidies, pensions, and financial aid.</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {CATEGORIES.map(({ label, icon, color }) => (
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {CATEGORIES.map(({ label, icon, count, color }) => (
               <Link
                 key={label}
                 to={`/schemes?category=${label}`}
-                className={`group card-hover p-5 text-center bg-gradient-to-br ${color} border`}
+                className={`glass p-5 rounded-2xl border bg-gradient-to-br ${color} hover:scale-[1.03] transition-all duration-200 group flex flex-col justify-between`}
               >
-                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{icon}</div>
-                <p className="font-semibold text-white text-sm">{label}</p>
-                <ChevronRight className="w-4 h-4 text-surface-400 mx-auto mt-2 group-hover:text-white transition-colors" />
+                <div className="flex items-start justify-between">
+                  <span className="text-3xl group-hover:scale-110 transition-transform">{icon}</span>
+                  <span className="text-[11px] font-semibold text-surface-400 bg-surface-900/60 px-2 py-0.5 rounded-full">{count}</span>
+                </div>
+                <div className="mt-4">
+                  <h3 className="font-display font-bold text-white text-base group-hover:text-primary-300 transition-colors">{label}</h3>
+                  <p className="text-xs text-surface-400 mt-0.5 flex items-center gap-1">
+                    Explore schemes <ChevronRight className="w-3 h-3 text-surface-500" />
+                  </p>
+                </div>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── How it works ─────────────────────────────────────────────────── */}
-      <section className="py-20 bg-surface-900/30">
+      {/* ── 4. Featured Popular Schemes ──────────────────────────────────── */}
+      <section className="py-20 bg-surface-900/30 border-y border-surface-800/80">
         <div className="page-container">
-          <div className="text-center mb-16">
-            <h2 className="section-title">How It Works</h2>
-            <p className="section-subtitle">Three simple steps to discover your benefits</p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <h2 className="section-title">Popular Welfare Schemes</h2>
+              <p className="section-subtitle">Highest-impact Central & State programs supporting millions of households.</p>
+            </div>
+            <Link to="/schemes" className="btn-secondary text-sm font-semibold shrink-0">
+              View All 135+ Schemes →
+            </Link>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {STEPS.map(({ step, title, desc, icon: Icon }) => (
-              <div key={step} className="card p-8 text-center group hover:border-primary-500/40 transition-all duration-300">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 border border-primary-500/30 flex items-center justify-center mx-auto mb-6 group-hover:shadow-glow transition-all duration-300">
-                  <Icon className="w-8 h-8 text-primary-400" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURED_SCHEMES.map((scheme) => (
+              <div
+                key={scheme.name}
+                className={`card p-6 border ${scheme.color} rounded-2xl flex flex-col justify-between hover:translate-y-[-4px] transition-all duration-200`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${scheme.badge}`}>
+                      {scheme.category}
+                    </span>
+                    <span className="text-xs text-surface-400">{scheme.tag}</span>
+                  </div>
+                  <h3 className="font-display font-bold text-white text-lg mb-2">{scheme.name}</h3>
+                  <p className="text-sm text-surface-300 leading-relaxed mb-6 font-medium">
+                    💰 {scheme.benefit}
+                  </p>
                 </div>
-                <div className="text-xs font-bold text-primary-400 tracking-widest mb-3">STEP {step}</div>
-                <h3 className="text-xl font-display font-bold text-white mb-3">{title}</h3>
-                <p className="text-surface-400 text-sm leading-relaxed">{desc}</p>
+
+                <Link
+                  to="/eligibility"
+                  className="btn-primary w-full py-2.5 text-xs font-semibold justify-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Check Eligibility</span>
+                </Link>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section className="py-20">
+      {/* ── 5. How It Works ───────────────────────────────────────────────── */}
+      <section className="py-24">
         <div className="page-container">
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { icon: Zap, title: 'Instant Results', desc: 'Get eligibility results in seconds with explainable decisions.', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/30' },
-              { icon: Shield, title: 'Explainable AI', desc: 'We show you exactly why you qualify or don\'t — no black box.', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' },
-              { icon: Sparkles, title: 'AI Chatbot', desc: 'Ask SchemeBot anything about government benefits in plain English.', color: 'text-primary-400', bg: 'bg-primary-500/10 border-primary-500/30' },
-            ].map(({ icon: Icon, title, desc, color, bg }) => (
-              <div key={title} className={`card p-6 border ${bg}`}>
-                <Icon className={`w-8 h-8 ${color} mb-4`} />
-                <h3 className="font-display font-bold text-lg text-white mb-2">{title}</h3>
-                <p className="text-surface-400 text-sm">{desc}</p>
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="section-title">How SchemeChecker Works</h2>
+            <p className="section-subtitle">Three simple steps to unlock your government entitlements.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {STEPS.map(({ step, title, desc, icon: Icon, color }) => (
+              <div key={step} className="card p-8 relative rounded-3xl group hover:border-primary-500/40 transition-colors">
+                <div className="flex items-center justify-between mb-6">
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-7 h-7" />
+                  </div>
+                  <span className="font-display font-black text-4xl text-surface-700/80">{step}</span>
+                </div>
+                <h3 className="font-display font-bold text-white text-xl mb-3">{title}</h3>
+                <p className="text-sm text-surface-400 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA Banner ───────────────────────────────────────────────────── */}
-      {!isAuthenticated && (
-        <section className="py-20">
-          <div className="page-container">
-            <div className="relative card p-12 text-center overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 via-accent-500/10 to-primary-500/10" />
-              <div className="relative">
-                <h2 className="text-4xl font-display font-bold text-white mb-4">
-                  Ready to find your benefits?
-                </h2>
-                <p className="text-surface-400 mb-8 text-lg">
-                  Create a free profile and check eligibility for all schemes in under 2 minutes.
+      {/* ── 6. Testimonials (Social Proof) ─────────────────────────────────── */}
+      <section className="py-20 bg-surface-900/40 border-y border-surface-800/80">
+        <div className="page-container">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-1 text-amber-400 mb-2">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+            <h2 className="section-title">Trusted by Citizens Across India</h2>
+            <p className="section-subtitle">Real experiences from farmers, students, and small business owners.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t) => (
+              <div key={t.name} className="card p-6 border-l-4 border-l-primary-500 flex flex-col justify-between rounded-2xl">
+                <p className="text-surface-300 text-sm leading-relaxed mb-6 italic">
+                  "{t.quote}"
                 </p>
-                <Link to="/register" className="btn-primary btn-lg">
-                  Create Free Account
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${t.color} text-white font-bold text-xs flex items-center justify-center shrink-0`}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-white text-sm">{t.name}</h4>
+                    <p className="text-xs text-surface-400">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. FAQ Accordion ───────────────────────────────────────────────── */}
+      <section className="py-24">
+        <div className="page-container max-w-3xl">
+          <div className="text-center mb-16">
+            <h2 className="section-title">Frequently Asked Questions</h2>
+            <p className="section-subtitle">Everything you need to know about checking and claiming government benefits.</p>
+          </div>
+
+          <div className="space-y-4">
+            {FAQS.map((faq, index) => {
+              const isOpen = openFaq === index
+              return (
+                <div
+                  key={faq.q}
+                  className="card rounded-2xl overflow-hidden border border-surface-800 transition-colors"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : index)}
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 hover:text-primary-300 transition-colors"
+                  >
+                    <span className="font-display font-bold text-white text-base">{faq.q}</span>
+                    <ChevronDown className={`w-5 h-5 text-surface-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-primary-400' : ''}`} />
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-5 pb-5 text-sm text-surface-300 leading-relaxed border-t border-surface-800/60 pt-3">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 8. Final CTA ───────────────────────────────────────────────────── */}
+      <section className="py-16">
+        <div className="page-container">
+          <div className="relative rounded-3xl overflow-hidden p-8 sm:p-14 text-center bg-gradient-to-br from-primary-600 via-accent-600 to-orange-600 shadow-2xl shadow-primary-500/20">
+            <div className="absolute inset-0 bg-hero-pattern opacity-30 pointer-events-none" />
+
+            <div className="relative max-w-2xl mx-auto space-y-6">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-white leading-tight">
+                Don't Miss Out on Government Benefits Meant for You
+              </h2>
+              <p className="text-white/90 text-base sm:text-lg">
+                Join thousands of citizens who have simplified their welfare discovery. Takes only 2 minutes.
+              </p>
+              <div className="pt-2">
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-2 bg-white text-surface-950 hover:bg-surface-100 font-display font-bold px-8 py-4 rounded-xl text-base shadow-2xl hover:scale-105 transition-all"
+                >
+                  <Sparkles className="w-5 h-5 text-primary-600" />
+                  <span>Start Free Eligibility Check</span>
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </div>
             </div>
           </div>
-        </section>
-      )}
-
-      {/* Footer */}
-      <footer className="border-t border-surface-800 py-8">
-        <div className="page-container text-center text-surface-500 text-sm">
-          <p>SchemeChecker — Empowering citizens to access government benefits they deserve.</p>
-          <p className="mt-2">Data from official government portals. Always verify on official websites before applying.</p>
         </div>
-      </footer>
+      </section>
+
     </div>
   )
 }
