@@ -36,8 +36,22 @@ class SchemeListView(generics.ListAPIView):
             )
 
         category = params.get('category', '').strip()
-        if category:
-            qs = qs.filter(category__iexact=category)
+        if category and category.lower() != 'all':
+            cat_l = category.lower()
+            if cat_l in ['health', 'healthcare']:
+                qs = qs.filter(Q(category__icontains='health') | Q(search_tags__icontains='health') | Q(search_tags__icontains='medical'))
+            elif cat_l in ['pension', 'pensions', 'senior', 'senior citizens']:
+                qs = qs.filter(Q(category__icontains='senior') | Q(category__icontains='social') | Q(search_tags__icontains='pension') | Q(name__icontains='pension') | Q(description__icontains='pension'))
+            elif cat_l in ['insurance', 'bima']:
+                qs = qs.filter(Q(search_tags__icontains='insurance') | Q(name__icontains='bima') | Q(name__icontains='insurance') | Q(category__icontains='health') | Q(search_tags__icontains='pmfby'))
+            elif cat_l in ['finance', 'msme', 'business']:
+                qs = qs.filter(Q(category__icontains='msme') | Q(search_tags__icontains='loan') | Q(search_tags__icontains='finance') | Q(search_tags__icontains='subsidy'))
+            elif 'employment' in cat_l or 'skill' in cat_l:
+                qs = qs.filter(Q(category__icontains='employment') | Q(search_tags__icontains='job') | Q(search_tags__icontains='skill'))
+            elif 'disability' in cat_l or 'handicap' in cat_l:
+                qs = qs.filter(Q(category__icontains='disability') | Q(search_tags__icontains='disability') | Q(search_tags__icontains='handicap'))
+            else:
+                qs = qs.filter(Q(category__icontains=category) | Q(search_tags__icontains=category))
 
         state = params.get('state', '').strip()
         if state:

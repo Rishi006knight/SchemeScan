@@ -76,9 +76,36 @@ export const schemeApi = {
       // Resilient fallback: provides instant access to 135+ seeded schemes
       let list = fallbackSchemes as unknown as Scheme[]
       if (params?.category && params.category !== 'All') {
-        list = list.filter(
-          (s) => s.category.toLowerCase() === params.category!.toLowerCase()
-        )
+        const cat = params.category.toLowerCase()
+        list = list.filter((s) => {
+          const sCat = s.category.toLowerCase()
+          const sName = s.name.toLowerCase()
+          const sTags = (s.search_tags || '').toLowerCase()
+          const sDesc = s.description.toLowerCase()
+
+          if (cat === 'health' || cat === 'healthcare') {
+            return sCat.includes('health') || sTags.includes('health') || sTags.includes('hospital') || sTags.includes('medical')
+          }
+          if (cat === 'pension' || cat === 'pensions' || cat.includes('senior')) {
+            return sCat.includes('senior') || sCat.includes('social') || sTags.includes('pension') || sName.includes('pension') || sDesc.includes('pension')
+          }
+          if (cat === 'insurance' || cat === 'bima') {
+            return sTags.includes('insurance') || sName.includes('bima') || sName.includes('insurance') || sDesc.includes('insurance') || sCat.includes('health') || sTags.includes('pmfby')
+          }
+          if (cat === 'finance' || cat === 'msme' || cat.includes('business')) {
+            return sCat === 'msme' || sTags.includes('loan') || sTags.includes('finance') || sTags.includes('subsidy') || sTags.includes('credit')
+          }
+          if (cat.includes('employment') || cat.includes('skill')) {
+            return sCat.includes('employ') || sTags.includes('job') || sTags.includes('skill') || sTags.includes('internship')
+          }
+          if (cat.includes('disability')) {
+            return sCat.includes('disab') || sTags.includes('handicap') || sTags.includes('disab')
+          }
+          if (cat.includes('social')) {
+            return sCat.includes('social')
+          }
+          return sCat === cat || sCat.includes(cat)
+        })
       }
       if (params?.state && params.state !== 'All States' && params.state !== 'All') {
         list = list.filter(
