@@ -118,10 +118,57 @@
     @apply bg-gradient-to-r from-primary-400 via-accent-400 to-primary-300 bg-clip-text text-transparent;
   }
 
-  /* ── Loading shimmer ─────────────────────────────────────────────── */
+  /* ── Shimmer & Pulse Animations ───────────────────────────────────── */
   .shimmer {
     @apply bg-gradient-to-r from-surface-800 via-surface-700 to-surface-800 animate-shimmer;
     background-size: 200% 100%;
+  }
+
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(
+      60deg,
+      rgba(255, 255, 255, 0) 20%,
+      rgba(255, 255, 255, 0.25) 50%,
+      rgba(255, 255, 255, 0) 80%
+    );
+    transform: rotate(25deg);
+    transition: all 0.75s ease;
+  }
+  .btn-shine:hover::after {
+    left: 130%;
+  }
+
+  .pulse-ring {
+    animation: pulseRing 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  }
+
+  @keyframes pulseRing {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 16px rgba(99, 102, 241, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    }
+  }
+
+  .gradient-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-primary-500/40 to-transparent;
   }
 
   /* ── Page container ──────────────────────────────────────────────── */

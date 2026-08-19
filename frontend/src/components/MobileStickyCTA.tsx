@@ -1,24 +1,58 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Sparkles, ArrowRight } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function MobileStickyCTA() {
   const location = useLocation()
-  
-  // Hide on auth pages or eligibility check page where full flow is active
+  const [isVisible, setIsVisible] = useState(true)
+
+  useEffect(() => {
+    const target = document.getElementById('final-cta')
+    if (!target) {
+      setIsVisible(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // If final-cta is visible in viewport, hide sticky bar
+        setIsVisible(!entry.isIntersecting)
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [location.pathname])
+
+  // Hide on auth pages or profile/eligibility pages
   if (['/login', '/register', '/eligibility', '/profile'].includes(location.pathname)) {
     return null
   }
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-surface-950/90 backdrop-blur-xl border-t border-surface-800 shadow-2xl">
-      <Link
-        to="/eligibility"
-        className="w-full btn-primary py-3 px-5 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold shadow-glow"
-      >
-        <Sparkles className="w-4 h-4 text-primary-200" />
-        <span>Check 135+ Schemes Free</span>
-        <ArrowRight className="w-4 h-4 ml-auto" />
-      </Link>
-    </div>
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-surface-950/95 backdrop-blur-xl border-t border-surface-800 shadow-2xl"
+        >
+          <Link
+            to="/eligibility"
+            className="w-full btn-primary btn-shine py-3 px-4 flex items-center justify-between rounded-xl text-sm font-bold shadow-glow"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary-200" />
+              <span>Check Eligibility Free</span>
+            </div>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

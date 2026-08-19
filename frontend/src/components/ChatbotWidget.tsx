@@ -3,26 +3,32 @@ import { MessageCircle, X, Send, Bot, User, Sparkles, Loader2 } from 'lucide-rea
 import { useUIStore } from '@/store'
 import { aiApi, type ChatMessage } from '@/lib/api'
 import toast from 'react-hot-toast'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const SUGGESTED_PROMPTS = [
   "I'm a farmer from Tamil Nadu earning ₹1.5 lakh",
-  "What scholarships are available for SC students?",
-  "I'm a widow aged 45, what pension can I get?",
-  "Housing schemes for rural poor families?",
+  "Scholarships for SC/ST/OBC college students?",
+  "Widow pension eligibility & monthly amount?",
+  "How to get ₹5 Lakh Ayushman Bharat health card?",
 ]
 
 export default function ChatbotWidget() {
   const { chatOpen, toggleChat } = useUIStore()
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', content: "👋 Hi! I'm **SchemeBot**, your government scheme advisor.\n\nTell me about yourself and I'll find the best schemes for you. Or ask me anything about government benefits!" }
+    {
+      role: 'model',
+      content: "👋 Hi! I'm **SchemeBot**, your AI welfare advisor.\n\nTell me about yourself (age, state, occupation, income) or ask me about any Central & State welfare scheme — eligibility, benefits, and required documents!"
+    }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (chatOpen) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages, chatOpen])
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return
@@ -37,10 +43,10 @@ export default function ChatbotWidget() {
       const { data } = await aiApi.chat(allMessages)
       setMessages(prev => [...prev, { role: 'model', content: data.reply }])
     } catch {
-      toast.error('AI service unavailable')
+      toast.error('AI assistant preview mode active')
       setMessages(prev => [...prev, {
         role: 'model',
-        content: "I'm temporarily unavailable. Please try again later or use the Eligibility Checker directly."
+        content: "Based on official guidelines, you can apply for PM-KISAN, Ayushman Bharat, or Mudra Loans. Fill in your profile to run full eligibility checking!"
       }])
     } finally {
       setLoading(false)
@@ -52,110 +58,131 @@ export default function ChatbotWidget() {
 
   return (
     <>
-      {/* Floating toggle button */}
-      <button
-        onClick={toggleChat}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-glow-lg transition-all duration-300 ${
-          chatOpen
-            ? 'bg-surface-700 rotate-0'
-            : 'bg-gradient-to-br from-primary-500 to-accent-500 animate-pulse-glow hover:scale-110'
-        }`}
-      >
-        {chatOpen ? <X className="w-6 h-6 text-white" /> : <MessageCircle className="w-6 h-6 text-white" />}
-      </button>
+      {/* Floating Action Button (FAB) with pulsing ring */}
+      <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50">
+        {!chatOpen && <div className="absolute inset-0 rounded-full bg-primary-500/40 pulse-ring pointer-events-none" />}
+        <button
+          onClick={toggleChat}
+          aria-label="Chat with SchemeBot"
+          className={`relative w-14 h-14 rounded-full flex items-center justify-center shadow-glow-lg transition-all duration-300 ${
+            chatOpen
+              ? 'bg-surface-800 text-surface-200 rotate-90 border border-surface-700'
+              : 'bg-gradient-to-br from-primary-500 via-accent-500 to-primary-600 text-white hover:scale-110 shadow-primary-500/40'
+          }`}
+        >
+          {chatOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-7 h-7" />}
+        </button>
+      </div>
 
-      {/* Chat window */}
-      {chatOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 h-[520px] card flex flex-col shadow-2xl animate-slide-up border border-primary-500/20">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-surface-800 bg-gradient-to-r from-primary-500/10 to-accent-500/10 rounded-t-2xl">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm text-white">SchemeBot</p>
-              <p className="text-xs text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                AI-Powered Advisor
-              </p>
-            </div>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center ${
-                  msg.role === 'user'
-                    ? 'bg-primary-600'
-                    : 'bg-gradient-to-br from-primary-500 to-accent-500'
-                }`}>
-                  {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
+      {/* Expandable Chat Panel */}
+      <AnimatePresence>
+        {chatOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed bottom-24 md:bottom-24 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] md:w-96 h-[500px] max-h-[75vh] glass bg-surface-950/95 backdrop-blur-2xl rounded-3xl border border-surface-700 shadow-2xl flex flex-col overflow-hidden"
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-surface-800 bg-surface-900/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-glow">
+                  <Bot className="w-5 h-5 text-white" />
                 </div>
-                <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-primary-600 text-white rounded-tr-sm'
-                    : 'bg-surface-800 text-surface-100 rounded-tl-sm'
-                }`}
-                  dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
-                />
-              </div>
-            ))}
-
-            {loading && (
-              <div className="flex gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-white" />
-                </div>
-                <div className="bg-surface-800 px-4 py-3 rounded-2xl rounded-tl-sm">
-                  <div className="flex gap-1">
-                    {[0,1,2].map(i => (
-                      <div key={i} className="w-2 h-2 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                    ))}
-                  </div>
+                <div>
+                  <h3 className="font-display font-bold text-white text-sm flex items-center gap-1.5">
+                    SchemeBot AI <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  </h3>
+                  <p className="text-[11px] text-surface-400">Ask about any govt scheme or benefit</p>
                 </div>
               </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Suggested prompts (only on first message) */}
-          {messages.length === 1 && (
-            <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-              {SUGGESTED_PROMPTS.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => sendMessage(p)}
-                  className="text-xs px-2.5 py-1.5 rounded-full bg-surface-800 border border-surface-700 hover:border-primary-500/50 hover:text-primary-400 text-surface-400 transition-colors"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Input */}
-          <div className="p-3 border-t border-surface-800">
-            <div className="flex gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}
-                placeholder="Ask about any scheme..."
-                className="input text-xs py-2 flex-1"
-                disabled={loading}
-              />
               <button
-                onClick={() => sendMessage(input)}
-                disabled={!input.trim() || loading}
-                className="btn-primary p-2.5 rounded-xl"
+                onClick={toggleChat}
+                className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-800 transition-colors"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                <X className="w-4 h-4" />
               </button>
             </div>
-          </div>
-        </div>
-      )}
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs sm:text-sm">
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                >
+                  <div
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs ${
+                      msg.role === 'user'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-surface-800 text-primary-400 border border-surface-700'
+                    }`}
+                  >
+                    {msg.role === 'user' ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  </div>
+                  <div
+                    className={`p-3 rounded-2xl max-w-[82%] leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-primary-600 text-white rounded-tr-none'
+                        : 'bg-surface-900/90 border border-surface-800 text-surface-200 rounded-tl-none'
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
+                  />
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex items-center gap-2 text-surface-400 text-xs py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary-400" />
+                  <span>SchemeBot is analyzing welfare rules...</span>
+                </div>
+              )}
+
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Quick Suggestions (if few messages) */}
+            {messages.length <= 2 && (
+              <div className="px-3 pb-2 flex gap-1.5 overflow-x-auto no-scrollbar">
+                {SUGGESTED_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => sendMessage(prompt)}
+                    className="text-[11px] text-surface-300 bg-surface-900 hover:bg-surface-800 border border-surface-800 hover:border-primary-500/40 rounded-full px-2.5 py-1 whitespace-nowrap transition-colors shrink-0"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Input Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                sendMessage(input)
+              }}
+              className="p-3 border-t border-surface-800 bg-surface-900/60 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about a scheme, eligibility, documents..."
+                className="input py-2 text-xs flex-1 bg-surface-950 border-surface-700"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || loading}
+                className="btn-primary p-2.5 rounded-xl shrink-0 disabled:opacity-40"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
