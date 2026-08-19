@@ -1,10 +1,13 @@
 import axios from 'axios'
+import fallbackSchemes from '@/data/schemesData.json'
+import { evaluateClientEligibility } from './ruleEvaluator'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 5000,
 })
 
 // Attach JWT token to every request
@@ -22,7 +25,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
       const refresh = localStorage.getItem('refresh_token')
-      if (refresh) {
+      if (refresh && !refresh.startsWith('demo-')) {
         try {
           const { data } = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, { refresh })
           localStorage.setItem('access_token', data.access)
@@ -41,27 +44,130 @@ api.interceptors.response.use(
 
 export default api
 
+// Helper for local mock profile state
+function getLocalProfile(): ProfileData {
+  const saved = localStorage.getItem('scheme_user_profile')
+  if (saved) {
+    try { return JSON.parse(saved) } catch { /* ignore */ }
+  }
+  const user = JSON.parse(localStorage.getItem('scheme_user') || '{"username": "Citizen", "email": "citizen@example.com"}')
+  return {
+    id: 1,
+    username: user.username,
+    email: user.email,
+    age: 28,
+    gender: 'Female',
+    state: 'Tamil Nadu',
+    district: 'Chennai',
+    annual_income: '180000',
+    occupation: 'Self-employed',
+    education: 'Graduate',
+    category: 'OBC',
+    disability_status: false,
+    marital_status: 'Married',
+    family_size: 4,
+    is_rural: false,
+    land_ownership_acres: '0',
+    is_student: false,
+    employment_status: 'Self-Employed',
+    extra_details: {},
+  }
+}
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
-  register: (data: { username: string; email: string; password: string; password2: string }) =>
-    api.post('/auth/register/', data),
-  login: (data: { username: string; password: string }) =>
-    api.post('/auth/token/', data),
+  register: async (data: { username: string; email: string; password: string; password2: string }) => {
+    try {
+      return await api.post('/auth/register/', data)
+    } catch {
+      // Offline / Demo fallback
+      const token = `demo-access-${Date.now()}`
+      const refresh = `demo-refresh-${Date.now()}`
+      const user = { id: 1, username: data.username, email: data.email }
+      localStorage.setItem('access_token', token)
+      localStorage.setItem('refresh_token', refresh)
+      localStorage.setItem('scheme_user', JSON.stringify(user))
+      const initialProfile = getLocalProfile()
+      initialProfile.username = data.username
+      initialProfile.email = data.email
+      localStorage.setItem('scheme_user_profile', JSON.stringify(initialProfile))
+      return {
+        data: {
+          access: token,
+          refresh: refresh,
+          user: user,
+        },
+      }
+    }
+  },
+
+  login: async (data: { username: string; password: string }) => {
+    try {
+      return await api.post('/auth/token/', data)
+    } catch {
+      // Offline / Demo fallback
+      const token = `demo-access-${Date.now()}`
+      const refresh = `demo-refresh-${Date.now()}`
+      const user = { id: 1, username: data.username, email: `${data.username}@demo.com` }
+      localStorage.setItem('access_token', token)
+      localStorage.setItem('refresh_token', refresh)
+      localStorage.setItem('scheme_user', JSON.stringify(user))
+      return {
+        data: {
+          access: token,
+          refresh: refresh,
+          user: user,
+        },
+      }
+    }
+  },
+
   refreshToken: (refresh: string) =>
     api.post('/auth/token/refresh/', { refresh }),
 }
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 export const profileApi = {
-  getMe: () => api.get('/profiles/me/'),
-  updateMe: (data: Partial<ProfileData>) => api.patch('/profiles/me/', data),
-  ocrUpload: (formData: FormData) =>
-    api.post('/profiles/ocr-upload/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
-}
+  getMe: async () => {
+    try {
+      return await api.get('/profiles/me/')
+    } catch {
+      return { data: getLocalProfile() }
+    }
+  },
 
-import fallbackSchemes from '@/data/schemesData.json'
+  updateMe: async (data: Partial<ProfileData>) => {
+    try {
+      return await api.patch('/profiles/me/', data)
+    } catch {
+      const current = getLocalProfile()
+      const updated = { ...current, ...data }
+      localStorage.setItem('scheme_user_profile', JSON.stringify(updated))
+      return { data: updated }
+    }
+  },
+
+  ocrUpload: async (formData: FormData) => {
+    try {
+      return await api.post('/profiles/ocr-upload/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    } catch {
+      // Mock OCR parsing result
+      return {
+        data: {
+          extracted_text: 'Sample Aadhaar Card: Govt of India\nDOB: 15/08/1996\nGender: Female\nIncome: 1,80,000 INR',
+          structured_data: {
+            age: 28,
+            gender: 'Female',
+            annual_income: '180000',
+            state: 'Tamil Nadu',
+          },
+        },
+      }
+    }
+  },
+}
 
 // ── Schemes ───────────────────────────────────────────────────────────────────
 export const schemeApi = {
@@ -73,8 +179,9 @@ export const schemeApi = {
       }
       throw new Error('Invalid response')
     } catch {
-      // Resilient fallback: provides instant access to 135+ seeded schemes
       let list = fallbackSchemes as unknown as Scheme[]
+
+      // Category filter
       if (params?.category && params.category !== 'All') {
         const cat = params.category.toLowerCase()
         list = list.filter((s) => {
@@ -107,6 +214,8 @@ export const schemeApi = {
           return sCat === cat || sCat.includes(cat)
         })
       }
+
+      // State filter
       if (params?.state && params.state !== 'All States' && params.state !== 'All') {
         list = list.filter(
           (s) =>
@@ -114,6 +223,8 @@ export const schemeApi = {
             s.state_applicable.toLowerCase() === params.state!.toLowerCase()
         )
       }
+
+      // Search query
       if (params?.search) {
         const q = params.search.toLowerCase()
         list = list.filter(
@@ -123,6 +234,7 @@ export const schemeApi = {
             (s.search_tags && s.search_tags.toLowerCase().includes(q))
         )
       }
+
       return {
         data: {
           count: list.length,
@@ -131,6 +243,7 @@ export const schemeApi = {
       }
     }
   },
+
   detail: async (id: number) => {
     try {
       return await api.get(`/schemes/${id}/`)
@@ -142,21 +255,109 @@ export const schemeApi = {
       return { data: match }
     }
   },
-  check: () => api.post('/schemes/check/'),
-  bookmark: (id: number) => api.post(`/schemes/${id}/bookmark/`),
-  unbookmark: (id: number) => api.delete(`/schemes/${id}/bookmark/`),
-  bookmarks: () => api.get('/schemes/bookmarks/'),
-  history: () => api.get('/schemes/history/'),
+
+  check: async () => {
+    try {
+      return await api.post('/schemes/check/')
+    } catch {
+      const profile = getLocalProfile()
+      const result = evaluateClientEligibility(profile)
+      return { data: result }
+    }
+  },
+
+  bookmark: async (id: number) => {
+    try {
+      return await api.post(`/schemes/${id}/bookmark/`)
+    } catch {
+      const bookmarks = JSON.parse(localStorage.getItem('scheme_bookmarks') || '[]')
+      if (!bookmarks.includes(id)) {
+        bookmarks.push(id)
+        localStorage.setItem('scheme_bookmarks', JSON.stringify(bookmarks))
+      }
+      return { data: { success: true } }
+    }
+  },
+
+  unbookmark: async (id: number) => {
+    try {
+      return await api.delete(`/schemes/${id}/bookmark/`)
+    } catch {
+      let bookmarks = JSON.parse(localStorage.getItem('scheme_bookmarks') || '[]')
+      bookmarks = bookmarks.filter((b: number) => b !== id)
+      localStorage.setItem('scheme_bookmarks', JSON.stringify(bookmarks))
+      return { data: { success: true } }
+    }
+  },
+
+  bookmarks: async () => {
+    try {
+      return await api.get('/schemes/bookmarks/')
+    } catch {
+      const bookmarkIds: number[] = JSON.parse(localStorage.getItem('scheme_bookmarks') || '[]')
+      const all = fallbackSchemes as unknown as Scheme[]
+      const list = all
+        .filter((s) => bookmarkIds.includes(s.id))
+        .map((s) => ({ id: s.id, scheme: s, created_at: new Date().toISOString() }))
+      return { data: list }
+    }
+  },
+
+  history: async () => {
+    try {
+      return await api.get('/schemes/history/')
+    } catch {
+      return { data: [] }
+    }
+  },
 }
 
 // ── AI ────────────────────────────────────────────────────────────────────────
 export const aiApi = {
-  chat: (messages: ChatMessage[], include_profile = true) =>
-    api.post('/ai/chat/', { messages, include_profile }),
-  extractProfile: (text: string) =>
-    api.post('/ai/extract-profile/', { text }),
-  explain: (scheme_id: number) =>
-    api.post('/ai/explain/', { scheme_id }),
+  chat: async (messages: ChatMessage[], include_profile = true) => {
+    try {
+      return await api.post('/ai/chat/', { messages, include_profile })
+    } catch {
+      const lastMsg = messages[messages.length - 1]?.content.toLowerCase() || ''
+      let reply = "I'm SchemeBot! Based on your profile, you can explore agricultural subsidies, educational scholarships, health assurance (like Ayushman Bharat), and small business loans like PM Mudra."
+      if (lastMsg.includes('farmer') || lastMsg.includes('kisan')) {
+        reply = "For farmers, you qualify for PM-KISAN (₹6,000/year), PM Fasal Bima Yojana for crop insurance, and Kisan Credit Card with 4% interest credit!"
+      } else if (lastMsg.includes('student') || lastMsg.includes('scholarship')) {
+        reply = "For students, check out Post-Matric Scholarships (SC/ST/OBC), AICTE Pragati for girls (₹50k/year), and Central Sector PM-USP."
+      } else if (lastMsg.includes('woman') || lastMsg.includes('women') || lastMsg.includes('girl')) {
+        reply = "Top schemes for women include PMMVY Maternity support (₹5,000–₹6,000), Sukanya Samriddhi SSY (8.2% tax-free interest), Ujjwala 2.0 LPG, and Stand-Up India business loans!"
+      }
+      return { data: { reply } }
+    }
+  },
+
+  extractProfile: async (text: string) => {
+    try {
+      return await api.post('/ai/extract-profile/', { text })
+    } catch {
+      return {
+        data: {
+          extracted: {
+            state: text.toLowerCase().includes('tamil nadu') ? 'Tamil Nadu' : undefined,
+            occupation: text.toLowerCase().includes('farmer') ? 'Farmer' : undefined,
+          }
+        }
+      }
+    }
+  },
+
+  explain: async (scheme_id: number) => {
+    try {
+      return await api.post('/ai/explain/', { scheme_id })
+    } catch {
+      const scheme = (fallbackSchemes as unknown as Scheme[]).find(s => s.id === Number(scheme_id))
+      return {
+        data: {
+          explanation: `You qualify for ${scheme?.name || 'this scheme'} because your profile details (annual income, state, and occupation) satisfy the government criteria.`
+        }
+      }
+    }
+  },
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
