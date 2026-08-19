@@ -61,11 +61,60 @@ export const profileApi = {
     }),
 }
 
+import fallbackSchemes from '@/data/schemesData.json'
+
 // ── Schemes ───────────────────────────────────────────────────────────────────
 export const schemeApi = {
-  list: (params?: { search?: string; category?: string; state?: string }) =>
-    api.get('/schemes/', { params }),
-  detail: (id: number) => api.get(`/schemes/${id}/`),
+  list: async (params?: { search?: string; category?: string; state?: string }) => {
+    try {
+      const res = await api.get('/schemes/', { params })
+      if (res.data && (Array.isArray(res.data.results) || Array.isArray(res.data))) {
+        return res
+      }
+      throw new Error('Invalid response')
+    } catch {
+      // Resilient fallback: provides instant access to 135+ seeded schemes
+      let list = fallbackSchemes as unknown as Scheme[]
+      if (params?.category && params.category !== 'All') {
+        list = list.filter(
+          (s) => s.category.toLowerCase() === params.category!.toLowerCase()
+        )
+      }
+      if (params?.state && params.state !== 'All States' && params.state !== 'All') {
+        list = list.filter(
+          (s) =>
+            s.state_applicable === 'All' ||
+            s.state_applicable.toLowerCase() === params.state!.toLowerCase()
+        )
+      }
+      if (params?.search) {
+        const q = params.search.toLowerCase()
+        list = list.filter(
+          (s) =>
+            s.name.toLowerCase().includes(q) ||
+            s.description.toLowerCase().includes(q) ||
+            (s.search_tags && s.search_tags.toLowerCase().includes(q))
+        )
+      }
+      return {
+        data: {
+          count: list.length,
+          results: list,
+        },
+      }
+    }
+  },
+  detail: async (id: number) => {
+    try {
+      return await api.get(`/schemes/${id}/`)
+    } catch {
+      const match =
+        (fallbackSchemes as unknown as Scheme[]).find(
+          (s) => s.id === Number(id)
+        ) || (fallbackSchemes as unknown as Scheme[])[0]
+      return { data: match }
+    }
+  },
   check: () => api.post('/schemes/check/'),
   bookmark: (id: number) => api.post(`/schemes/${id}/bookmark/`),
   unbookmark: (id: number) => api.delete(`/schemes/${id}/bookmark/`),
