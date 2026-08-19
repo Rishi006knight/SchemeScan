@@ -171,6 +171,24 @@
     @apply h-px w-full bg-gradient-to-r from-transparent via-primary-500/40 to-transparent;
   }
 
+  .dot-grid {
+    background-image: radial-gradient(rgba(100, 116, 139, 0.2) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .animate-float-slow {
+    animation: floatSlow 4s ease-in-out infinite;
+  }
+
+  @keyframes floatSlow {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
   /* ── Page container ──────────────────────────────────────────────── */
   .page-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
