@@ -8,7 +8,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?style=for-the-badge&logo=supabase)
 
-**Live Demo → [schemescan.netlify.app](https://schemescan.netlify.app)**
+**Live Demo → [https://scheme-scan.vercel.app/](https://scheme-scan.vercel.app/)**
 
 </div>
 
