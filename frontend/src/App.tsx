@@ -23,7 +23,7 @@ export default function App() {
   const { isAuthenticated } = useAuthStore()
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-surface-950 text-surface-100 selection:bg-primary-500 selection:text-white">
+    <div className="min-h-screen flex flex-col justify-between bg-white text-gray-900 selection:bg-violet-200 selection:text-violet-900">
       <div>
         <Navbar />
         <main>
