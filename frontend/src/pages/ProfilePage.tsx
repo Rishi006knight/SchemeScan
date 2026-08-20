@@ -55,7 +55,7 @@ export default function ProfilePage() {
       setForm(prev => ({ ...prev, ...fields }))
       toast.success(`✅ ${Object.keys(fields).length} fields auto-filled from document!`)
     },
-    onError: () => toast.error('OCR failed. Ensure Tesseract is installed.'),
+    onError: () => toast.error('OCR failed. Ensure Tesseract is installed or document is legible.'),
   })
 
   const nlpMutation = useMutation({
@@ -90,35 +90,35 @@ export default function ProfilePage() {
   }
 
   if (isLoading) return (
-    <div className="min-h-screen py-12 page-container">
+    <div className="min-h-screen bg-gray-50 py-12 page-container">
       <div className="h-8 w-64 shimmer rounded mb-8" />
       <div className="h-96 shimmer rounded-2xl" />
     </div>
   )
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="page-container max-w-3xl">
         <div className="mb-10">
           <h1 className="section-title flex items-center gap-3">
-            <User className="w-10 h-10 text-primary-400" /> My Profile
+            <User className="w-9 h-9 text-violet-600" /> My Profile
           </h1>
           <p className="section-subtitle">The more complete your profile, the more accurate your eligibility results</p>
         </div>
 
         {/* OCR Upload */}
-        <div className="card p-6 mb-6 border border-primary-500/20">
-          <h2 className="font-display font-bold text-white mb-1 flex items-center gap-2">
-            <Upload className="w-5 h-5 text-primary-400" /> Auto-fill from Document
+        <div className="bg-white p-6 mb-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h2 className="font-display font-bold text-gray-900 mb-1 flex items-center gap-2">
+            <Upload className="w-5 h-5 text-violet-600" /> Auto-fill from Document
           </h2>
-          <p className="text-surface-400 text-sm mb-4">Upload Aadhaar, Income Certificate, or Student ID — OCR + AI fills your profile automatically</p>
+          <p className="text-gray-500 text-sm mb-4">Upload Aadhaar, Income Certificate, or Student ID — OCR + AI fills your profile automatically</p>
 
           <div className="mb-4">
-            <label className="input-label text-xs">Document Type</label>
+            <label className="input-label text-xs font-semibold text-gray-700">Document Type</label>
             <select
               value={docType}
               onChange={(e) => setDocType(e.target.value)}
-              className="select text-xs py-2 bg-surface-900 border-surface-700 text-white rounded-lg focus:ring-primary-500 focus:border-primary-500 w-full sm:w-64"
+              className="select text-xs py-2 bg-white border-gray-300 text-gray-800 rounded-lg w-full sm:w-64"
             >
               <option value="general">General / Other Document</option>
               <option value="aadhaar">Aadhaar Card (identity/age/address)</option>
@@ -128,43 +128,43 @@ export default function ProfilePage() {
           </div>
 
           <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-            isDragActive ? 'border-primary-500 bg-primary-500/10' : 'border-surface-700 hover:border-primary-500/50 hover:bg-surface-800/50'
+            isDragActive ? 'border-violet-500 bg-violet-50' : 'border-gray-300 hover:border-violet-400 hover:bg-violet-50/40'
           }`}>
             <input {...getInputProps()} />
             {ocrMutation.isPending ? (
-              <div className="flex flex-col items-center gap-2 text-primary-400">
+              <div className="flex flex-col items-center gap-2 text-violet-600">
                 <Loader2 className="w-8 h-8 animate-spin" />
-                <p className="text-sm">Processing document with OCR + AI...</p>
+                <p className="text-sm font-semibold">Processing document with OCR + AI...</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2 text-surface-400">
-                <FileText className="w-8 h-8" />
-                <p className="text-sm">{isDragActive ? 'Drop the image here' : 'Drag & drop image or click to upload'}</p>
-                <p className="text-xs">Supports: JPG, PNG, WebP</p>
+              <div className="flex flex-col items-center gap-2 text-gray-500">
+                <FileText className="w-8 h-8 text-gray-400" />
+                <p className="text-sm font-medium text-gray-700">{isDragActive ? 'Drop the image here' : 'Drag & drop image or click to upload'}</p>
+                <p className="text-xs text-gray-400">Supports: JPG, PNG, WebP</p>
               </div>
             )}
           </div>
         </div>
 
         {/* NLP Auto-fill */}
-        <div className="card p-6 mb-6 border border-accent-500/20">
+        <div className="bg-white p-6 mb-6 rounded-2xl border border-gray-200 shadow-sm">
           <button onClick={() => setShowNlp(!showNlp)}
             className="w-full flex items-center justify-between text-left">
             <div className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-accent-400" />
-              <span className="font-display font-bold text-white">AI Profile Extraction</span>
-              <span className="badge bg-accent-500/15 text-accent-400 border-accent-500/30 text-xs">New</span>
+              <Brain className="w-5 h-5 text-fuchsia-600" />
+              <span className="font-display font-bold text-gray-900">AI Profile Extraction</span>
+              <span className="badge bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 text-xs font-semibold">New</span>
             </div>
-            <span className="text-surface-400 text-sm">{showNlp ? '▲ Hide' : '▼ Try it'}</span>
+            <span className="text-gray-500 text-sm font-semibold">{showNlp ? '▲ Hide' : '▼ Try it'}</span>
           </button>
 
           {showNlp && (
             <div className="mt-4 space-y-3">
-              <p className="text-surface-400 text-sm">Describe yourself in plain English and AI will fill your profile</p>
+              <p className="text-gray-500 text-sm">Describe yourself in plain English and AI will fill your profile</p>
               <textarea
                 value={nlpText}
                 onChange={(e) => setNlpText(e.target.value)}
-                className="input min-h-[80px] resize-none"
+                className="input min-h-[80px] resize-none border-gray-300"
                 placeholder='e.g. "I am a 28-year-old female farmer from Tamil Nadu earning ₹1.5 lakh per year. I belong to SC category and own 2 acres of land."'
               />
               <button onClick={() => nlpMutation.mutate(nlpText)} disabled={!nlpText.trim() || nlpMutation.isPending}
@@ -177,9 +177,9 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Form */}
-        <form onSubmit={handleSave} className="card p-8 space-y-6">
-          <h2 className="font-display font-bold text-white text-xl flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Profile Details
+        <form onSubmit={handleSave} className="bg-white p-8 space-y-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h2 className="font-display font-bold text-gray-900 text-xl flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" /> Profile Details
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
@@ -275,23 +275,23 @@ export default function ProfilePage() {
           </div>
 
           {/* Toggles */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {([
               { key: 'is_rural', label: 'Rural Resident' },
               { key: 'is_student', label: 'Currently Student' },
               { key: 'disability_status', label: 'Has Disability' },
             ] as Array<{ key: keyof ProfileData; label: string }>).map(({ key, label }) => (
-              <label key={key} className="flex items-center gap-3 cursor-pointer card p-4">
-                <div className={`relative w-11 h-6 rounded-full transition-colors ${form[key] ? 'bg-primary-600' : 'bg-surface-700'}`}
+              <label key={key} className="flex items-center gap-3 cursor-pointer bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-2xs hover:border-gray-300">
+                <div className={`relative w-11 h-6 rounded-full transition-colors ${form[key] ? 'bg-violet-600' : 'bg-gray-300'}`}
                   onClick={() => set(key, !form[key])}>
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${form[key] ? 'left-6' : 'left-1'}`} />
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-xs transition-transform ${form[key] ? 'left-6' : 'left-1'}`} />
                 </div>
-                <span className="text-sm font-medium text-white">{label}</span>
+                <span className="text-sm font-semibold text-gray-800">{label}</span>
               </label>
             ))}
           </div>
 
-          <button type="submit" disabled={updateMutation.isPending} className="btn-primary w-full justify-center py-3 text-base">
+          <button type="submit" disabled={updateMutation.isPending} className="btn-primary w-full justify-center py-3.5 text-base font-bold shadow-lg shadow-violet-500/20">
             {updateMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Save Profile</>}
           </button>
         </form>

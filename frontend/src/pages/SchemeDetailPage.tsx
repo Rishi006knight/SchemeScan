@@ -33,15 +33,15 @@ export default function SchemeDetailPage() {
   }
 
   if (isLoading) return (
-    <div className="min-h-screen py-12 page-container">
+    <div className="min-h-screen bg-gray-50 py-12 page-container">
       <div className="h-8 w-48 shimmer rounded mb-8" />
       <div className="h-64 shimmer rounded-2xl" />
     </div>
   )
 
   if (error || !scheme) return (
-    <div className="min-h-screen py-12 page-container text-center">
-      <p className="text-surface-400">Scheme not found.</p>
+    <div className="min-h-screen bg-gray-50 py-12 page-container text-center">
+      <p className="text-gray-500">Scheme not found.</p>
       <Link to="/schemes" className="btn-primary mt-4">Browse Schemes</Link>
     </div>
   )
@@ -49,52 +49,52 @@ export default function SchemeDetailPage() {
   const docs = scheme.documents_required.split(',').map((d: string) => d.trim())
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="page-container max-w-4xl">
-        <Link to="/schemes" className="flex items-center gap-2 text-surface-400 hover:text-white mb-8 transition-colors text-sm">
+        <Link to="/schemes" className="flex items-center gap-2 text-gray-500 hover:text-violet-600 mb-8 transition-colors text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Back to Schemes
         </Link>
 
-        <div className="card p-8 mb-6">
+        <div className="bg-white border border-gray-200 rounded-3xl p-8 mb-6 shadow-sm">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>
               <span className="badge-category mb-3">{scheme.category}</span>
-              <h1 className="text-3xl font-display font-bold text-white mt-2">{scheme.name}</h1>
+              <h1 className="text-3xl font-display font-black text-gray-900 mt-2">{scheme.name}</h1>
             </div>
             <button onClick={toggleBookmark}
-              className={`p-3 rounded-xl border transition-all flex-shrink-0 ${bookmarked ? 'bg-primary-500/20 border-primary-500/50 text-primary-400' : 'bg-surface-800 border-surface-700 text-surface-400 hover:border-primary-500/50'}`}>
+              className={`p-3 rounded-2xl border transition-all flex-shrink-0 ${bookmarked ? 'bg-violet-50 border-violet-300 text-violet-600' : 'bg-white border-gray-300 text-gray-400 hover:border-violet-300 hover:text-violet-600'}`}>
               {bookmarked ? <BookmarkCheck className="w-5 h-5" /> : <BookmarkPlus className="w-5 h-5" />}
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-sm text-surface-400 mb-6">
-            <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />
+          <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-6">
+            <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-violet-600" />
               {scheme.state_applicable === 'All' ? 'All India (Central Scheme)' : scheme.state_applicable}
             </span>
             {scheme.deadline && (
-              <span className="flex items-center gap-1.5 text-amber-400"><Calendar className="w-4 h-4" />
+              <span className="flex items-center gap-1.5 text-amber-700 font-medium"><Calendar className="w-4 h-4 text-amber-600" />
                 Deadline: {new Date(scheme.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
               </span>
             )}
           </div>
 
-          <p className="text-surface-300 leading-relaxed">{scheme.description}</p>
+          <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{scheme.description}</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="card p-6">
-            <h2 className="font-display font-bold text-white text-lg mb-4 flex items-center gap-2">💰 Benefits</h2>
-            <p className="text-emerald-400 text-sm leading-relaxed">{scheme.benefits}</p>
+          <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
+            <h2 className="font-display font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">💰 Benefits</h2>
+            <p className="text-emerald-700 font-medium text-sm leading-relaxed">{scheme.benefits}</p>
           </div>
 
-          <div className="card p-6">
-            <h2 className="font-display font-bold text-white text-lg mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary-400" /> Documents Required
+          <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
+            <h2 className="font-display font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-violet-600" /> Documents Required
             </h2>
             <ul className="space-y-2">
               {docs.map((doc: string) => (
-                <li key={doc} className="flex items-center gap-2 text-sm text-surface-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary-400 flex-shrink-0" /> {doc}
+                <li key={doc} className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0" /> {doc}
                 </li>
               ))}
             </ul>
@@ -104,12 +104,12 @@ export default function SchemeDetailPage() {
         <div className="mt-6 flex flex-col sm:flex-row gap-4">
           {scheme.official_website && (
             <a href={scheme.official_website} target="_blank" rel="noopener noreferrer"
-              className="btn-primary btn-lg gap-2 flex-1 justify-center">
+              className="btn-primary btn-lg gap-2 flex-1 justify-center shadow-lg shadow-violet-500/20">
               Apply on Official Website <ExternalLink className="w-5 h-5" />
             </a>
           )}
           {isAuthenticated && (
-            <Link to="/eligibility" className="btn-secondary btn-lg flex-1 justify-center">
+            <Link to="/eligibility" className="btn-secondary btn-lg flex-1 justify-center font-bold">
               Check My Eligibility
             </Link>
           )}
